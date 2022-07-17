@@ -90,8 +90,16 @@ app.get('/:shortLink', async (req, res) => {
 app.post('/create', async (req, res) => {
 	try {
 		const reqBody = req.body;
-		// console.log(reqBody);
-		const shortUrl = createShort(reqBody.longUrl);
+		let randomizeDate = new Date();
+		let randomizeNum = Math.random() * 10000;
+		console.log(`${reqBody.longUrl}${randomizeDate}${randomizeNum}`);
+		let shortUrl = '';
+		if (reqBody.randomize === 'on') {
+			shortUrl = createShort(`${reqBody.longUrl}${randomizeDate}${randomizeNum}`);
+		} else {
+			shortUrl = createShort(reqBody.longUrl);
+		}
+
 		if (!shortUrl) {
 			res.status(400).send({ msg: `${reqBody.longUrl} is not a valid link` });
 		}
@@ -145,7 +153,7 @@ const readFromDb = async (key, value) => {
 // // helps to write to db. Upsert helps with adding if not found, or update if found.
 const writeToDb = async (longUrl, shortUrl, timesVisited, ttl) => {
 	console.log('write to db');
-	const query = { longUrl: longUrl };
+	const query = { shortUrl: shortUrl };
 	const updated_at = Date.now();
 	const update = {
 		$set: {
@@ -156,6 +164,7 @@ const writeToDb = async (longUrl, shortUrl, timesVisited, ttl) => {
 		},
 		updated_at
 	};
+
 	return await Hashs.findOneAndUpdate(query, update, { upsert: true });
 };
 
