@@ -20,7 +20,7 @@ app.use(express.json());
 app.set('json spaces', 2);
 
 app.listen(port, () => console.log(`Listening on port ${port}`));
-// console.log(process.env);
+
 // mongoose setup
 mongoose.connect(process.env.dburi);
 const db = mongoose.connection;
@@ -29,10 +29,8 @@ db.once('open', () => console.error('Connected to db'));
 
 app.get('/', async (req, res) => {
 	try {
-		// const data = await readFromDb();
 		const data = '';
 		const shortenedUrl = '';
-		// res.status(200).json({ data });
 		res.render('index.ejs', { data, shortenedUrl });
 	} catch (err) {
 		console.log(err);
@@ -59,33 +57,6 @@ app.get('/:shortLink', async (req, res) => {
 		console.log(err);
 	}
 });
-
-// app.get('/hash/:id', async (req, res) => {
-// 	let valueId = req.params.id;
-// 	let key = 'key';
-// 	try {
-// 		const data = await readFromDb(key, valueId);
-// 		res.status(200).send(data);
-// 	} catch (err) {
-// 		console.log(err);
-// 	}
-// });
-
-// app.get('/hash/:id/date', async (req, res) => {
-// 	let valueId = req.params.id;
-// 	let key = 'key';
-// 	try {
-// 		const data = await readFromDb(key, valueId);
-// 		const response = data.completedDate;
-// 		if (response) {
-// 			res.status(200).send(response);
-// 		} else {
-// 			res.status(200).send('');
-// 		}
-// 	} catch (err) {
-// 		console.log(err);
-// 	}
-// });
 
 app.post('/create', async (req, res) => {
 	try {
@@ -116,31 +87,8 @@ app.post('/create', async (req, res) => {
 		console.log(err);
 	}
 });
-// app.patch('/hash/:id', async (req, res) => {
-// 	let key = req.params.id;
-
-// 	try {
-// 		const reqBody = req.body;
-// 		writeToDb(key, reqBody.user, reqBody.title, reqBody.description, reqBody.completed, reqBody.completedDate);
-
-// 		res.status(201).redirect(`/hashs`);
-// 	} catch (err) {
-// 		console.log(err);
-// 	}
-// });
-// app.delete('/hash/:id', async (req, res) => {
-// 	let key = req.params.id;
-// 	console.log('deleting...', key);
-// 	try {
-// 		deleteFromDb(key);
-// 		res.status(202).send({ message: `${key} has been deleted` });
-// 	} catch (err) {
-// 		console.log(err);
-// 	}
-// });
 
 // read all documents from db
-
 const readFromDb = async (key, value) => {
 	console.log('read from db');
 	if (key != undefined && value != undefined) {
@@ -150,7 +98,7 @@ const readFromDb = async (key, value) => {
 	}
 };
 
-// // helps to write to db. Upsert helps with adding if not found, or update if found.
+// helps to write to db. Upsert helps with adding if not found, or update if found.
 const writeToDb = async (longUrl, shortUrl, timesVisited, ttl) => {
 	console.log('write to db');
 	const query = { shortUrl: shortUrl };
@@ -167,12 +115,6 @@ const writeToDb = async (longUrl, shortUrl, timesVisited, ttl) => {
 
 	return await Hashs.findOneAndUpdate(query, update, { upsert: true });
 };
-
-// const deleteFromDb = async (hashId) => {
-// 	console.log('delete from db');
-// 	const query = { hashId: hashId };
-// 	return await Hashs.findOneAndDelete(query);
-// };
 
 const urlValidator = (value) => {
 	const linkRegex = /((([A-Za-z]{3,9}:(?:\/\/)?)(?:[-;:&=\+\$,\w]+@)?[A-Za-z0-9.-]+|(?:www.|[-;:&=\+\$,\w]+@)[A-Za-z0-9.-]+)((?:\/[\+~%\/.\w-_]*)?\??(?:[-\+=&;%@.\w_]*)#?(?:[\w]*))?)/;
