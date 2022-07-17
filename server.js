@@ -29,6 +29,16 @@ db.once('open', () => console.error('Connected to db'));
 
 app.get('/', async (req, res) => {
 	try {
+		// const data = await readFromDb();
+		const data = '';
+		// res.status(200).json({ data });
+		res.render('index.ejs', { data });
+	} catch (err) {
+		console.log(err);
+	}
+});
+app.get('/showlinks', async (req, res) => {
+	try {
 		const data = await readFromDb();
 		res.status(200).json({ data });
 		// res.render('index.ejs');
@@ -39,8 +49,11 @@ app.get('/', async (req, res) => {
 app.get('/:shortLink', async (req, res) => {
 	try {
 		const data = await readFromDb('shortUrl', req.params.shortLink);
-		console.log(data.shortUrl);
-		res.status(301).redirect(data.longUrl);
+		if (data) {
+			res.status(301).redirect(data.longUrl);
+		} else {
+			res.status(301).send(`${req.params.shortLink} is not a valid short link`);
+		}
 	} catch (err) {
 		console.log(err);
 	}
@@ -76,6 +89,7 @@ app.get('/:shortLink', async (req, res) => {
 app.post('/create', async (req, res) => {
 	try {
 		const reqBody = req.body;
+		// console.log(reqBody);
 		const shortUrl = createShort(reqBody.longUrl);
 		if (!shortUrl) {
 			res.status(400).send({ msg: `${reqBody.longUrl} is not a valid link` });
@@ -83,7 +97,12 @@ app.post('/create', async (req, res) => {
 		writeToDb(reqBody.longUrl, shortUrl, reqBody.timesVisited, reqBody.ttl);
 
 		// res.status(201).redirect(`/`);
-		res.status(201).send({ msg: `${reqBody.longUrl} was shortened to ${shortUrl}` });
+		// res.status(201).send({ msg: `${reqBody.longUrl} was shortened to ${shortUrl}` });
+		const data = shortUrl;
+		const reqOrigin = req.headers.origin;
+		const shortenedUrl = `${reqOrigin}/${shortUrl}`;
+		console.log('origin', `${reqOrigin}/${shortUrl}`);
+		res.render('index.ejs', { data, shortenedUrl });
 	} catch (err) {
 		console.log(err);
 	}
@@ -115,7 +134,7 @@ app.post('/create', async (req, res) => {
 
 const readFromDb = async (key, value) => {
 	console.log('read from db');
-	if (value != undefined) {
+	if (key != undefined && value != undefined) {
 		return await Hashs.findOne({ [key]: value });
 	} else {
 		return await Hashs.find().lean();
