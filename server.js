@@ -31,8 +31,9 @@ app.get('/', async (req, res) => {
 	try {
 		// const data = await readFromDb();
 		const data = '';
+		const shortenedUrl = '';
 		// res.status(200).json({ data });
-		res.render('index.ejs', { data });
+		res.render('index.ejs', { data, shortenedUrl });
 	} catch (err) {
 		console.log(err);
 	}
