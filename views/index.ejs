@@ -20,9 +20,12 @@
         <input type="submit" value="Shorten">
     </form>
     <h4>
-        Your shortened Url is: <a href=<%=shortenedUrl%>>
-            <%=shortenedUrl%>
-        </a>
+        <% if(shortenedUrl){ %>
+            Your shortened Url is: <a href=<%=shortenedUrl%>>
+                <%=shortenedUrl%>
+            </a>
+            <% } %>
+
     </h4>
     <script>
 
