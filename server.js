@@ -39,8 +39,8 @@ app.get('/', async (req, res) => {
 app.get('/:shortLink', async (req, res) => {
 	try {
 		const data = await readFromDb('shortUrl', req.params.shortLink);
-
-		res.status(200).json({ data });
+		console.log(data.shortUrl);
+		res.status(301).redirect(data.longUrl);
 	} catch (err) {
 		console.log(err);
 	}
