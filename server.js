@@ -7,25 +7,28 @@ const path = require('path');
 require('dotenv').config();
 const port = process.env.PORT || 3000;
 const Hashs = require('./app/model/hash');
-const shortHash = require('short-hash');
-
+const { logger, createShort } = require('./app/helpers/helpers');
 // view engine setup
 app.set('view engine', 'ejs');
 app.use(express.static('public'));
 
 // configs
-app.use(bodyParser.urlencoded({ extended: true }));
-app.use(cors());
-app.use(express.json());
+app.use(bodyParser.urlencoded({ extended: true })).use(cors()).use(express.json()).use(logger);
 app.set('json spaces', 2);
 
-app.listen(port, () => console.log(`Listening on port ${port}`));
+// app.listen doesnt run for test suite
+/* istanbul ignore next */
+if (require.main === module) {
+	app.listen(port, () => {
+		console.log(`Server listening on port ${port}`);
+	});
+}
 
 // mongoose setup
 mongoose.connect(process.env.dburi);
 const db = mongoose.connection;
-db.on('error', (error) => console.error(error));
-db.once('open', () => console.error('Connected to db'));
+db.on('error', (error) => console.log(error));
+db.once('open', () => console.log('Connected to db'));
 
 app.get('/', async (req, res) => {
 	try {
@@ -36,6 +39,7 @@ app.get('/', async (req, res) => {
 		console.log(err);
 	}
 });
+
 app.get('/showlinks', async (req, res) => {
 	try {
 		const data = await readFromDb();
@@ -45,6 +49,7 @@ app.get('/showlinks', async (req, res) => {
 		console.log(err);
 	}
 });
+
 app.get('/:shortLink', async (req, res) => {
 	try {
 		const data = await readFromDb('shortUrl', req.params.shortLink);
@@ -58,7 +63,7 @@ app.get('/:shortLink', async (req, res) => {
 	}
 });
 
-app.post('/create', async (req, res) => {
+app.post('/', async (req, res) => {
 	try {
 		const reqBody = req.body;
 		let randomizeDate = new Date();
@@ -76,12 +81,10 @@ app.post('/create', async (req, res) => {
 		}
 		writeToDb(reqBody.longUrl, shortUrl, reqBody.timesVisited, reqBody.ttl);
 
-		// res.status(201).redirect(`/`);
-		// res.status(201).send({ msg: `${reqBody.longUrl} was shortened to ${shortUrl}` });
 		const data = shortUrl;
 		const reqOrigin = req.headers.origin;
 		const shortenedUrl = `${reqOrigin}/${shortUrl}`;
-		console.log('origin', `${reqOrigin}/${shortUrl}`);
+
 		res.render('index.ejs', { data, shortenedUrl });
 	} catch (err) {
 		console.log(err);
@@ -116,19 +119,4 @@ const writeToDb = async (longUrl, shortUrl, timesVisited, ttl) => {
 	return await Hashs.findOneAndUpdate(query, update, { upsert: true });
 };
 
-const urlValidator = (value) => {
-	const linkRegex = /((([A-Za-z]{3,9}:(?:\/\/)?)(?:[-;:&=\+\$,\w]+@)?[A-Za-z0-9.-]+|(?:www.|[-;:&=\+\$,\w]+@)[A-Za-z0-9.-]+)((?:\/[\+~%\/.\w-_]*)?\??(?:[-\+=&;%@.\w_]*)#?(?:[\w]*))?)/;
-	return linkRegex.test(value);
-};
-
-const createShort = (value) => {
-	try {
-		if (urlValidator(value)) {
-			return shortHash(value);
-		} else {
-			return false;
-		}
-	} catch (err) {
-		console.log(err);
-	}
-};
+module.exports = app;
